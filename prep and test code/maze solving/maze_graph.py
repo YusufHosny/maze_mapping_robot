@@ -41,6 +41,10 @@ class Directions(Enum):
         elif dir == Directions.RIGHT:
             return Directions.LEFT
 
+class Orientation(Enum):
+    HORIZONTAL = 0
+    VERTICAL = 1
+
 
 class Graph:
 
@@ -110,7 +114,7 @@ class Graph:
         return None
     
 
-    def get_xy_coordinates(self, node = None):
+    def get_xy_coordinates(self, node = None) -> tuple[int]:
         # if no node is passed, by default get start node
         if node is None:
             node = self.start
@@ -126,4 +130,56 @@ class Graph:
         y_pos = max([(path.count(Directions.UP) - path.count(Directions.DOWN)) for path in paths], default=0)
 
         return x_pos, y_pos
+    
+    # get a node object from the graph via its x, y coordinates
+    def get_node_at(self, x: int, y: int) -> Node:
+        for node in self.nodes:
+            if self.get_xy_coordinates(node) == (x, y):
+                return node
+    
+    # get the dimensions of the graph
+    def get_dims(self):
+        dims = [0, 0]
+        for node in self.nodes:
+            coord = self.get_xy_coordinates(node)
+            if coord[0] > dims[0]: dims[0] = coord[0]
+            if coord[1] > dims[1]: dims[1] = coord[1]
+        return [dims[0]+1, dims[1]+1]
 
+    # EXPORT SECTION
+
+    # gets the horizontal or vertical wall at a certain location
+    # starting with top left as origin
+    # e.g. horizonal(0, 0) = top left horizontal wall
+    # vertical(max, max) bottom right vertical wall
+    def check_wall_at(self, orientation , x: int, y: int):
+        node = self.get_node_at(x, y)
+        if orientation is Orientation.HORIZONTAL:
+            return (Directions.UP in [edge.dir for edge in node.edges])
+        elif orientation is Orientation.VERTICAL:
+            return (Directions.LEFT in [edge.dir for edge in node.edges])
+        
+    
+
+    # JSON return structure:
+    # anonymous object, contains 2 attributes (horizontals and verticals) which each contains
+    # a list of 0s and 1s defining whether there is or isnt a wall at a certain location
+    # also contains an attribute dims which is a list of 2 elements defining the dimensions
+    def json(self) -> str:
+        # get dimensions
+        dims = self.get_dims()
+        json_dims = dims
+
+        vert = []
+        horz = []
+        # populate wall arrays 
+        for y in range(dims[1]):
+            for x in range(dims[0]):
+                vert += [0 if self.check_wall_at(Orientation.VERTICAL, x, y) else 1]
+                horz += [0 if self.check_wall_at(Orientation.HORIZONTAL, x, y) else 1]
+            vert += [1]
+        horz += [1]*dims[0]
+        
+        json_string = f'{{\n\t"dims" : {json_dims},\n\t"verticals" : {vert},\n\t"horizontals" : {horz}\n}}'
+
+        return json_string

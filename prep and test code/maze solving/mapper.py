@@ -1,4 +1,4 @@
-from maze_graph import Graph as Maze, Directions
+from maze_graph import Directions, Node, Graph as Maze
 
 class Mapper:
     
@@ -7,7 +7,7 @@ class Mapper:
         self.cur_node = self.maze.start
         self.unmapped_nodes = []
         self.mapped_nodes = set()
-        self.map_node()
+        self.is_mapped = False
 
     # tuple of 4 booleans indicating if theres a path (True) or wall (False) in each direction
     def check_around(self) -> tuple[bool]:
@@ -15,7 +15,7 @@ class Mapper:
         # TODO check around with sensors and return if theres a wall or not for each dir
 
     
-    def go_to_node(self, node):
+    def go_to_node(self, node: Node):
         self._go_to_node_simulate(node)
         # TODO move physically with motors to node
 
@@ -30,7 +30,7 @@ class Mapper:
         return out
 
     # SIMULATION: instead of moving, print the path taken
-    def _go_to_node_simulate(self, node):
+    def _go_to_node_simulate(self, node: Node):
         path = self.maze.pathfind(self.cur_node, node)
         for dir in path: print(dir) 
 
@@ -69,6 +69,7 @@ class Mapper:
 
 
     def map(self):
+        self.map_node()
         # while there are still unmapped nodes
         while len(self.unmapped_nodes) > 0:
             # go to the first node in the unmapped node list
@@ -81,7 +82,8 @@ class Mapper:
 
             # remove it from the list of unmapped nodes
             self.unmapped_nodes.remove(next)
-
+            
+        self.is_mapped = True
 
 
 

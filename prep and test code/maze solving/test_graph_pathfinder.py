@@ -24,3 +24,6 @@ print(g.pathfind(n1, n14))
 print(g.get_xy_coordinates())
 print(g.get_xy_coordinates(n10))
 print(g.get_xy_coordinates(n7))
+
+print("dimensions:", g.get_dims())
+print(g.json())
