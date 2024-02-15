@@ -1,5 +1,6 @@
 from mapper import Mapper
 from time import sleep
+import api_manager as api
 
 
 # INITIALIZATION
@@ -9,7 +10,7 @@ m = Mapper()
 # MAIN LOOP
 while True:
     # start API polling function, polls and returns when new instruction is received
-    instruction = 0 # TODO add polling
+    instruction = api.poll_instructions()
 
     # process and execute instructon
     # Moving (X, Y)
@@ -24,7 +25,7 @@ while True:
         m.map()
 
     # update instruction as complete on API
-
+    api.set_instruction_complete()
 
     # sleep between checks to allow API error tolerace
     sleep(1)

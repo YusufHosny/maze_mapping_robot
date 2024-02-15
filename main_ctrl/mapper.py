@@ -1,4 +1,5 @@
 from maze_graph import Directions, Node, Graph as Maze
+import api_manager as api
 
 class Mapper:
     
@@ -84,6 +85,8 @@ class Mapper:
             self.unmapped_nodes.remove(next)
             
         self.is_mapped = True
+
+        api.set_mapping_complete(self.maze.json())
 
 
 
