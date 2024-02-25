@@ -18,6 +18,11 @@ class Mapper:
     
     def go_to_node(self, node: Node):
         self._go_to_node_simulate(node)
+        if self.is_mapped:
+            api.send_maze_packet(self.maze.get_xy_coordinates(self.cur_node), self.maze.json())
+        else:
+            api.send_maze_packet()
+
         # TODO move physically with motors to node
 
     # SIMULATION: instead of using sensors, input positions
@@ -85,8 +90,6 @@ class Mapper:
             self.unmapped_nodes.remove(next)
             
         self.is_mapped = True
-
-        api.set_mapping_complete(self.maze.json())
 
 
 
