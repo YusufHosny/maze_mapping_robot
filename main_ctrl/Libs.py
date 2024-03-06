@@ -185,3 +185,20 @@ class Gyroscope:
         # reset angle
         self.angle = 0
         self._angle = 0
+
+LOW = 0
+HIGH = 1
+class Schmitt_Trigger:
+    
+
+    def __init__(self, threshold_low, threshold_high):
+        self.state = LOW
+        self.threshold_low = threshold_low
+        self.threshold_high = threshold_high
+        pass
+    
+    def __call__(self, value):
+        if value > self.threshold_high and self.state == LOW:
+            self.state = HIGH
+        elif value < self.threshold_low and self.state == HIGH:
+            self.state = LOW

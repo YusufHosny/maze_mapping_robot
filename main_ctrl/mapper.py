@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from maze_graph import Directions, Node, Graph as Maze
 import api_manager as api
 
@@ -11,22 +13,25 @@ class Mapper:
         self.is_mapped = False
 
     # tuple of 4 booleans indicating if theres a path (True) or wall (False) in each direction
-    def check_around(self) -> tuple[bool]:
-        return self._check_around_input()
-        # TODO check around with sensors and return if theres a wall or not for each dir
+    # externally defined
+    def check_around(self) -> Tuple[bool]:
+        pass
 
+    # externally defined
+    def move_to(self, direc):
+        pass
     
     def go_to_node(self, node: Node):
-        self._go_to_node_simulate(node)
+        path = self.maze.pathfind(self.cur_node, node)
+        for direc in path:
+            self.move_to(direc)
         if self.is_mapped:
             api.send_maze_packet(self.maze.get_xy_coordinates(self.cur_node), self.maze.json())
         else:
             api.send_maze_packet()
 
-        # TODO move physically with motors to node
-
     # SIMULATION: instead of using sensors, input positions
-    def _check_around_input(self) -> tuple[bool]:
+    def _check_around_input(self) -> Tuple[bool]:
         inp = input("Input current surroundings: ")
         out = ()
         for letter in inp:

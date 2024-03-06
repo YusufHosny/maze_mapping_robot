@@ -1,11 +1,14 @@
 from mapper import Mapper
 from time import sleep
 import api_manager as api
+from robot import robot_controller
 
 
 # INITIALIZATION
 m = Mapper()
-
+r = robot_controller(0.5, 0.01, 2, 0.2)
+m.check_around = r.check_sensors
+m.move_to = r.move_to
 
 # MAIN LOOP
 while True:
