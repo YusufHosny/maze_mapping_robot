@@ -155,7 +155,7 @@ class robot_controller:
 
         return (s1, False, s2, s4)
     
-    def move_to(self):
+    def move_to(self, dir):
         start_angle = self.gyro.angle
         if dir == Directions.UP:
             start = get_denoise(self.u, 1)
