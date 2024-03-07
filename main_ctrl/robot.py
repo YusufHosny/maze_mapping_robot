@@ -45,6 +45,7 @@ class robot_controller:
         self.angle_low = -max_angular_noise
         self.angle_high = max_angular_noise
         self.grid_length = grid_length
+        self.schmitt = Schmitt_Trigger(self.angle_low, self.angle_high)
 
         self.gyro = Gyroscope()
 
@@ -68,9 +69,9 @@ class robot_controller:
         self.m3.stop()
         self.m4.stop()
 
-    schmitt = Schmitt_Trigger()
+
     
-    # moves robot 1 grid cell forward
+    # moves robot forward
     def advance(self, start_angle: int) -> None:
         
         self.schmitt(angle_between(start_angle, self.gyro.angle))
@@ -91,6 +92,9 @@ class robot_controller:
             self.m3.forward(self.target_spd)
             self.m4.forward(self.target_spd)
 
+
+
+    # right 90 degrees
     def right(self) -> None:
         start_angle = self.gyro.angle
         dtheta = abs(angle_between(self.gyro.angle, start_angle))
@@ -119,6 +123,7 @@ class robot_controller:
 
         self.stop()
 
+    # left 90 degrees
     def left(self) -> None:
         start_angle = self.gyro.angle
         dtheta = abs(angle_between(self.gyro.angle, start_angle))
@@ -146,6 +151,44 @@ class robot_controller:
             dtheta = abs(angle_between(self.gyro.angle, start_angle))
 
         self.stop()
+
+    def left_continuous(self):
+        spdleft = self.target_spd
+        spdright = self.target_spd * -1
+
+        # drive all 4 motors
+        if spdleft < 0:
+            self.m3.backward(-spdleft)
+            self.m4.backward(-spdleft)
+        else:
+            self.m3.forward(spdleft)
+            self.m4.forward(spdleft)
+
+        if spdright < 0:
+            self.m1.backward(-spdright)
+            self.m2.backward(-spdright)
+        else:
+            self.m1.forward(spdright)
+            self.m2.forward(spdright)
+    
+    def right_continuous(self):
+        spdleft = self.target_spd * -1
+        spdright = self.target_spd 
+
+        # drive all 4 motors
+        if spdleft < 0:
+            self.m3.backward(-spdleft)
+            self.m4.backward(-spdleft)
+        else:
+            self.m3.forward(spdleft)
+            self.m4.forward(spdleft)
+
+        if spdright < 0:
+            self.m1.backward(-spdright)
+            self.m2.backward(-spdright)
+        else:
+            self.m1.forward(spdright)
+            self.m2.forward(spdright)
 
     def check_sensors(self) -> Tuple[bool]:
         s1 = get_denoise(self.u, 1) > self.grid_length

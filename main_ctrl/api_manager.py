@@ -7,7 +7,7 @@ def poll_instructions():
     # call getInstruction until a non-empty list is returned
     while True:
         get_instruction = requests.get("https://studev.groept.be/api/a23ib2a03/getInstruction")
-        json_obj = json.loads(get_instruction)
+        json_obj = get_instruction.json()
         if len(json_obj) > 0:
             return json_obj[0]["OpCode"]
 
@@ -26,3 +26,17 @@ def send_maze_packet(position=None, json_maze=None):
         requests.get("https://studev.groept.be/api/a23ib2a03/sendEmptyDataPacket")
     else:
         requests.get(f"https://studev.groept.be/api/a23ib2a03/sendDataPacket/{position[0]}/{position[1]}/{json_maze}/1")
+
+
+
+def rc_get():
+    while True:
+        get_rc_rq = requests.get("https://studev.groept.be/api/a23ib2a03/RC_get")
+        json_obj = get_rc_rq.json()
+        if len(json_obj) > 0:
+            return json_obj[0]["rc_rq"]
+        
+
+def rc_set():
+    # call setInstructionComplete
+    requests.get("https://studev.groept.be/api/a23ib2a03/RC_complete")
