@@ -1,4 +1,8 @@
 from enum import Enum
+
+from typing import Tuple
+
+
 class Node:
 
     def __init__(self, edges: list = None, _name: str = "unnamed"):
@@ -40,6 +44,26 @@ class Directions(Enum):
             return Directions.RIGHT
         elif dir == Directions.RIGHT:
             return Directions.LEFT
+
+    def left_of(dir):
+        if dir == Directions.UP:
+            return Directions.LEFT
+        elif dir == Directions.DOWN:
+            return Directions.RIGHT
+        elif dir == Directions.LEFT:
+            return Directions.DOWN
+        elif dir == Directions.RIGHT:
+            return Directions.UP
+
+    def right_of(dir):
+        if dir == Directions.UP:
+            return Directions.RIGHT
+        elif dir == Directions.DOWN:
+            return Directions.LEFT
+        elif dir == Directions.LEFT:
+            return Directions.UP
+        elif dir == Directions.RIGHT:
+            return Directions.DOWN
 
 class Orientation(Enum):
     HORIZONTAL = 0
@@ -114,7 +138,7 @@ class Graph:
         return None
     
 
-    def get_xy_coordinates(self, node = None) -> tuple[int]:
+    def get_xy_coordinates(self, node = None) -> Tuple[int]:
         # if no node is passed, by default get start node
         if node is None:
             node = self.start

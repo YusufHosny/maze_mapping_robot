@@ -16,6 +16,7 @@ def angle_between(alpha: int, beta: int) -> int:
         return angle
 
 def get_denoise(u: DistanceSensor, ix: int) -> float:
+    return u[ix-1].distance
     ITERATIONS = 10
     DT = 0.01
     avg = 0
@@ -37,7 +38,7 @@ def get_denoise(u: DistanceSensor, ix: int) -> float:
     return avg
 
 class robot_controller:
-    def __init__(self, target_spd: float, update_interval: float, max_angular_noise: float, grid_length: int) -> None:
+    def __init__(self, target_spd: float, update_interval: float, max_angular_noise: float, grid_length: float) -> None:
         Device.pin_factory = p.PiGPIOFactory()
 
         self.target_spd = target_spd
@@ -54,14 +55,16 @@ class robot_controller:
         self.m3 = Motor(forward=15, backward=14, pwm=True) # right
         self.m4 = Motor(forward=17, backward=27, pwm=True) # right
 
+        self.facing = Directions.UP
 
         u1 = DistanceSensor(echo=6, trigger=13) # front (opposite to power bank cable)
         u2 = DistanceSensor(echo=19, trigger=26) # left
-        u3 = DistanceSensor(echo=25, trigger=8) # back
+        # u3 = DistanceSensor(echo=25, trigger=8) # back
         u4 = DistanceSensor(echo=16, trigger=20) # right
 
-        self.u = (u1, u2, u3, u4)
-            
+        self.u = (u1, u2, None, u4)
+
+        self.stop()
     
     def stop(self) -> None:
         self.m1.stop()
@@ -98,7 +101,7 @@ class robot_controller:
     def right(self) -> None:
         start_angle = self.gyro.angle
         dtheta = abs(angle_between(self.gyro.angle, start_angle))
-        while dtheta < 87:
+        while dtheta < 92:
             spdleft = self.target_spd * -easing(min(max(0, dtheta), 90)/90)
             spdright = self.target_spd * easing(min(max(0, dtheta), 90)/90)
 
@@ -127,7 +130,7 @@ class robot_controller:
     def left(self) -> None:
         start_angle = self.gyro.angle
         dtheta = abs(angle_between(self.gyro.angle, start_angle))
-        while dtheta < 87:
+        while dtheta < 85:
             spdleft = self.target_spd * easing(min(max(0, dtheta), 90)/90)
             spdright = self.target_spd * -easing(min(max(0, dtheta), 90)/90)
 
@@ -191,49 +194,57 @@ class robot_controller:
             self.m2.forward(spdright)
 
     def check_sensors(self) -> Tuple[bool]:
-        s1 = get_denoise(self.u, 1) > self.grid_length
-        s2 = get_denoise(self.u, 2) > self.grid_length
-        s3 = get_denoise(self.u, 3) > self.grid_length # TODO fix/remove
-        s4 = get_denoise(self.u, 4) > self.grid_length
+        s1 = get_denoise(self.u, 1) > self.grid_length # front
+        s2 = get_denoise(self.u, 2) > self.grid_length # left
+        # s3 = get_denoise(self.u, 3) > self.grid_length # TODO fix/remove
+        s4 = get_denoise(self.u, 4) > self.grid_length # right
 
-        return (s1, False, s2, s4)
-    
+        if self.facing == Directions.UP: results = (s1, False, s2, s4)
+        elif self.facing == Directions.LEFT: results = (s4, s2, s1, False)
+        elif self.facing == Directions.DOWN: results = (False, s1, s4, s2)
+        elif self.facing == Directions.RIGHT: results = (s2, s4, False, s1)
+
+        return results
+
+    def grid_block_forward(self, start_angle):
+        start = get_denoise(self.u, 1)
+        while (start - get_denoise(self.u, 1)) < self.grid_length:
+            self.advance(start_angle)
+        self.stop()
+        print(f"moved from {start} to {get_denoise(self.u, 1)}")
+
     def move_to(self, dir):
+        # if input(f"keep going to {dir}?") == 'n': exit(0)
+
         start_angle = self.gyro.angle
-        if dir == Directions.UP:
-            start = get_denoise(self.u, 1)
-            while (start - get_denoise(self.u, 1)) < self.grid_length:
-                self.advance(start_angle)
-            self.stop()
-        elif dir == Directions.DOWN:
+        if dir == self.facing:
+            self.grid_block_forward(start_angle)
+        elif dir == Directions.opposite(self.facing):
+            self.facing = Directions.opposite(self.facing)
             self.left()
-            self.left()
-            start = get_denoise(self.u, 1)
-            while (start - get_denoise(self.u, 1)) < self.grid_length:
-                self.advance(start_angle)
             self.stop()
-        elif dir == Directions.LEFT:
+            time.sleep(0.25)
             self.left()
-            start = get_denoise(self.u, 1)
-            while (start - get_denoise(self.u, 1)) < self.grid_length:
-                self.advance(start_angle)
-            self.stop()
-        elif dir == Directions.RIGHT:
+            self.grid_block_forward(start_angle)
+        elif dir == Directions.left_of(self.facing):
+            self.facing = Directions.left_of(self.facing)
+            self.left()
+            self.grid_block_forward(start_angle)
+        elif dir == Directions.right_of(self.facing):
+            self.facing = Directions.right_of(self.facing)
             self.right()
-            start = get_denoise(self.u, 1)
-            while (start - get_denoise(self.u, 1)) < self.grid_length:
-                self.advance(start_angle)
-            self.stop()
+            self.grid_block_forward(start_angle)
 
 
 
     ## DEBUGGING ##
-    def read_sensors(self) -> None:
+    def read_sensors(self, delay) -> None:
         while True:
             print("front:", get_denoise(self.u, 1))
             print("left:", get_denoise(self.u, 2))
-            print("back:", get_denoise(self.u, 3))
+            # print("back:", get_denoise(self.u, 3))
             print("right:", get_denoise(self.u, 4))
+            time.sleep(delay)
 
     def check_moves_straight(self) -> None:
         start = self.gyro.angle
