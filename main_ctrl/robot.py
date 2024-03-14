@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 from gpiozero import Device, Motor, DistanceSensor
 import gpiozero.pins.pigpio as p
 import time
@@ -7,16 +7,15 @@ from maze_graph import Directions
 
 # easing (smoothing) function to smooth out robot movement so that it slows down as it reaches the desired angle/location
 def easing(t: float) -> float: # t is normalized time from 0 to 1
-        return 1 - 0.3 * t**3
+    return 1 - 0.3 * t**3
 
 # get smallest angle between 2 angles
 def angle_between(alpha: int, beta: int) -> int:
-        angle = beta - alpha
-        angle += -360 if (angle>180) else 360 if (angle<-180) else 0
-        return angle
+    angle = beta - alpha
+    angle += -360 if (angle>180) else 360 if (angle<-180) else 0
+    return angle
 
-def get_denoise(u: DistanceSensor, ix: int) -> float:
-    return u[ix-1].distance
+def get_denoise(u: Tuple[DistanceSensor,DistanceSensor,DistanceSensor,DistanceSensor], ix: int) -> float:
     ITERATIONS = 10
     DT = 0.01
     avg = 0
@@ -36,6 +35,7 @@ def get_denoise(u: DistanceSensor, ix: int) -> float:
     avg = sum(values)/ITERATIONS
 
     return avg
+
 
 class robot_controller:
     def __init__(self, target_spd: float, update_interval: float, max_angular_noise: float, grid_length: float) -> None:
@@ -65,7 +65,7 @@ class robot_controller:
         self.u = (u1, u2, None, u4)
 
         self.stop()
-    
+
     def stop(self) -> None:
         self.m1.stop()
         self.m2.stop()
@@ -73,10 +73,10 @@ class robot_controller:
         self.m4.stop()
 
 
-    
+
     # moves robot forward
     def advance(self, start_angle: int) -> None:
-        
+
         self.schmitt(angle_between(start_angle, self.gyro.angle))
 
         # how much to speed up/slow down motors when the robot moves too far left
@@ -96,6 +96,25 @@ class robot_controller:
             self.m4.forward(self.target_spd)
 
 
+    def advance(self, start_angle: int) -> None:
+
+        self.schmitt(angle_between(start_angle, self.gyro.angle))
+
+        # how much to speed up/slow down motors when the robot moves too far left
+        # decided experimentally based on how strong left side is vs right side
+        ratio_up = 1.2
+        ratio_down = 0.8
+
+        if self.schmitt.state == LOW:
+            self.m1.backward(self.target_spd*ratio_up)
+            self.m2.backward(self.target_spd*ratio_up)
+            self.m3.backward(self.target_spd*ratio_down)
+            self.m4.backward(self.target_spd*ratio_down)
+        elif self.schmitt.state == HIGH:
+            self.m1.backward(self.target_spd)
+            self.m2.backward(self.target_spd)
+            self.m3.backward(self.target_spd)
+            self.m4.backward(self.target_spd)
 
     # right 90 degrees
     def right(self) -> None:
@@ -155,6 +174,62 @@ class robot_controller:
 
         self.stop()
 
+    def right_angle(self, angle) -> None:
+        start_angle = self.gyro.angle
+        dtheta = abs(angle_between(self.gyro.angle, start_angle))
+        while dtheta < 0.95*angle:
+            spdleft = self.target_spd * -easing(min(max(0, dtheta), angle)/angle)
+            spdright = self.target_spd * easing(min(max(0, dtheta), angle)/angle)
+
+            # drive all 4 motors
+            if spdleft < 0:
+                self.m3.backward(-spdleft)
+                self.m4.backward(-spdleft)
+            else:
+                self.m3.forward(spdleft)
+                self.m4.forward(spdleft)
+
+            if spdright < 0:
+                self.m1.backward(-spdright)
+                self.m2.backward(-spdright)
+            else:
+                self.m1.forward(spdright)
+                self.m2.forward(spdright)
+
+
+            time.sleep(self.dt)
+            dtheta = abs(angle_between(self.gyro.angle, start_angle))
+
+        self.stop()
+
+    def left_angle(self, angle) -> None:
+        start_angle = self.gyro.angle
+        dtheta = abs(angle_between(self.gyro.angle, start_angle))
+        while dtheta < 2*angle:
+            spdleft = self.target_spd * easing(min(max(0, dtheta), angle)/angle)
+            spdright = self.target_spd * -easing(min(max(0, dtheta), angle)/angle)
+
+            # drive all 4 motors
+            if spdleft < 0:
+                self.m3.backward(-spdleft)
+                self.m4.backward(-spdleft)
+            else:
+                self.m3.forward(spdleft)
+                self.m4.forward(spdleft)
+
+            if spdright < 0:
+                self.m1.backward(-spdright)
+                self.m2.backward(-spdright)
+            else:
+                self.m1.forward(spdright)
+                self.m2.forward(spdright)
+
+
+            time.sleep(self.dt)
+            dtheta = abs(angle_between(self.gyro.angle, start_angle))
+
+        self.stop()
+
     def left_continuous(self):
         spdleft = self.target_spd
         spdright = self.target_spd * -1
@@ -173,10 +248,10 @@ class robot_controller:
         else:
             self.m1.forward(spdright)
             self.m2.forward(spdright)
-    
+
     def right_continuous(self):
         spdleft = self.target_spd * -1
-        spdright = self.target_spd 
+        spdright = self.target_spd
 
         # drive all 4 motors
         if spdleft < 0:
@@ -235,6 +310,34 @@ class robot_controller:
             self.right()
             self.grid_block_forward(start_angle)
 
+    def get_angular_denoise(self, angular_range):
+        ITERATIONS = 20
+        vals = []
+
+        increment = angular_range/ITERATIONS
+        anchor = angular_range/2
+
+        self.left_angle(anchor)
+        time.sleep(0.1)
+
+        for _ in range(ITERATIONS):
+            self.right_angle(increment)
+            vals += [get_denoise(self.u, 1)]
+            time.sleep(0.05)
+        avg = sum(vals)/ITERATIONS
+
+        time.sleep(0.1)
+        self.left_angle(anchor)
+
+        max_deviation = 0.085
+
+        for value in vals:
+            if abs(value - avg) > max_deviation:
+                vals.remove(value)
+
+        avg = sum(vals)/ITERATIONS
+        return avg
+
 
 
     ## DEBUGGING ##
@@ -252,3 +355,6 @@ class robot_controller:
             self.advance(start)
             print("angle:", self.gyro.angle)
         self.stop()
+
+    def get_denoised_angular(self):
+        print(self.get_angular_denoise(10))
