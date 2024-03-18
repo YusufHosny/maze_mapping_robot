@@ -6,9 +6,9 @@ from robot import robot_controller
 
 # INITIALIZATION
 m = Mapper()
-r = robot_controller(0.5, 0.01, 2, 0.35)
+r = robot_controller(0.5, 0.01, 1, 0.32)
 m.check_around = r.check_sensors
-#m.move_to = r.move_to
+m.move_to = r.move_to
 
 # while True:
 #     r.read_sensors(1)
@@ -21,6 +21,7 @@ while True:
     # process and execute instructon
     # Moving (X, Y)
     if instruction[:3] == "MOV":
+        print("moving")
         # get argument
         grid_pos = (instruction[4], instruction[6])
         # move to target node
@@ -28,6 +29,7 @@ while True:
 
     # Mapping
     if instruction == "MAP" and m.is_mapped == False:
+        print("mapping")
         m.map()
     print("Done")
     # update instruction as complete on API

@@ -204,6 +204,6 @@ class Graph:
             vert += [1]
         horz += [1]*dims[0]
         
-        json_string = f'{{\n\t"dims" : {json_dims},\n\t"verticals" : {vert},\n\t"horizontals" : {horz}\n}}'
+        json_string = f'{{ "dims" : {json_dims}, "verticals" : {vert}, "horizontals" : {horz}}}'
 
         return json_string

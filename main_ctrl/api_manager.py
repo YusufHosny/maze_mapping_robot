@@ -25,7 +25,8 @@ def send_maze_packet(position=None, json_maze=None):
     if position is None and json_maze is None:
         requests.get("https://studev.groept.be/api/a23ib2a03/sendEmptyDataPacket")
     else:
-        requests.get(f"https://studev.groept.be/api/a23ib2a03/sendDataPacket/{position[0]}/{position[1]}/{json_maze}/1")
+        requests.post(f"https://studev.groept.be/api/a23ib2a03/sendDataPacket/",
+                      data={"px": position[0], "py": position[1], "map": json_maze, "completion": 1})
 
 
 

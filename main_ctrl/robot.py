@@ -96,7 +96,7 @@ class robot_controller:
             self.m4.forward(self.target_spd)
 
 
-    def advance(self, start_angle: int) -> None:
+    def reverse(self, start_angle: int) -> None:
 
         self.schmitt(angle_between(start_angle, self.gyro.angle))
 
@@ -310,6 +310,9 @@ class robot_controller:
             self.right()
             self.grid_block_forward(start_angle)
 
+        # adjust manually
+        self.manual()
+
     def get_angular_denoise(self, angular_range):
         ITERATIONS = 20
         vals = []
@@ -338,6 +341,22 @@ class robot_controller:
         avg = sum(vals)/ITERATIONS
         return avg
 
+
+    def manual(self):
+        v = input()
+        while v != 'q':
+            if v == 'w':
+                self.advance(self.gyro.angle)
+            elif v == 'a':
+                self.left_continuous()
+            elif v == 'd':
+                self.right_continuous()
+            elif v == 's':
+                self.reverse(self.gyro.angle)
+
+            time.sleep(0.3)
+            self.stop()
+            v = input()
 
 
     ## DEBUGGING ##

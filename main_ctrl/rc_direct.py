@@ -5,8 +5,7 @@ from robot import robot_controller
 r = robot_controller(0.5, 0.01, 2, 0.2)
 
 # MAIN LOOP
-while True:
-    v = input()
+while (v := input()) != 'q':
     if v == 'w':
         r.advance(r.gyro.angle)
     elif v == 'a':
@@ -16,7 +15,6 @@ while True:
     elif v == 's':
         r.reverse(r.gyro.angle)
 
-    # sleep between checks to allow API error tolerace
     time.sleep(0.3)
     r.stop()
 
