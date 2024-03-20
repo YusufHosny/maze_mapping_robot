@@ -4,7 +4,7 @@ from maze_graph import Directions, Node, Graph as Maze
 import api_manager as api
 
 class Mapper:
-    
+
     def __init__(self) -> None:
         self.maze = Maze()
         self.cur_node = self.maze.start
@@ -20,7 +20,7 @@ class Mapper:
     # externally defined
     def move_to(self, direc):
         pass
-    
+
     def go_to_node(self, node: Node):
         path = self.maze.pathfind(self.cur_node, node)
         for direc in path:
@@ -37,13 +37,13 @@ class Mapper:
         for letter in inp:
             if letter == "1": out += (True,)
             else: out += (False,)
-        
+
         return out
 
     # SIMULATION: instead of moving, print the path taken
     def _go_to_node_simulate(self, node: Node):
         path = self.maze.pathfind(self.cur_node, node)
-        for dir in path: print(dir) 
+        for dir in path: print(dir)
 
 
     def map_node(self):
@@ -93,11 +93,7 @@ class Mapper:
 
             # remove it from the list of unmapped nodes
             self.unmapped_nodes.remove(next)
-            
+
         api.send_maze_packet(self.maze.get_xy_coordinates(self.cur_node), self.maze.json())
         self.is_mapped = True
-
-
-
-
 

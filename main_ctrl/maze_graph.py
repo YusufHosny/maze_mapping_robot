@@ -99,7 +99,7 @@ class Graph:
         return new_node
 
 
-## currently a DFS pathfinder, for the purposes of this project its fine honestly
+    ## currently a DFS pathfinder, for the purposes of this project its fine honestly
     def pathfind(self, start: Node, end: Node, _path: list = None, explored: list = None) -> list:
         # initialize empty path and explored lists if first call
         if _path is None:
@@ -117,7 +117,7 @@ class Graph:
 
             # node edge is going to
             next = edge.dst
-                
+
             # if next hasn't been explored yet
             if next not in explored:
                 # add path taken from start to next
@@ -133,10 +133,10 @@ class Graph:
                 # if a path was found return it
                 if new_path is not None:
                     return new_path
-        
+
         # if no path is found return None
         return None
-    
+
 
     def get_xy_coordinates(self, node = None) -> Tuple[int]:
         # if no node is passed, by default get start node
@@ -154,13 +154,13 @@ class Graph:
         y_pos = max([(path.count(Directions.UP) - path.count(Directions.DOWN)) for path in paths], default=0)
 
         return x_pos, y_pos
-    
+
     # get a node object from the graph via its x, y coordinates
     def get_node_at(self, x: int, y: int) -> Node:
         for node in self.nodes:
             if self.get_xy_coordinates(node) == (x, y):
                 return node
-    
+
     # get the dimensions of the graph
     def get_dims(self):
         dims = [0, 0]
@@ -182,8 +182,8 @@ class Graph:
             return (Directions.UP in [edge.dir for edge in node.edges])
         elif orientation is Orientation.VERTICAL:
             return (Directions.LEFT in [edge.dir for edge in node.edges])
-        
-    
+
+
 
     # JSON return structure:
     # anonymous object, contains 2 attributes (horizontals and verticals) which each contains
@@ -203,7 +203,7 @@ class Graph:
                 horz += [0 if self.check_wall_at(Orientation.HORIZONTAL, x, y) else 1]
             vert += [1]
         horz += [1]*dims[0]
-        
+
         json_string = f'{{ "dims" : {json_dims}, "verticals" : {vert}, "horizontals" : {horz}}}'
 
         return json_string

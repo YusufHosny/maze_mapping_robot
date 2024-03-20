@@ -21,7 +21,7 @@ while True:
     # process and execute instructon
     # Moving (X, Y)
     if instruction[:3] == "MOV":
-        print("moving")
+        print("moving...", end='')
         # get argument
         grid_pos = (instruction[4], instruction[6])
         # move to target node
@@ -29,11 +29,18 @@ while True:
 
     # Mapping
     if instruction == "MAP" and m.is_mapped == False:
-        print("mapping")
+        print("mapping...", end='')
         m.map()
 
     if instruction == "MNL":
+        print("manual control mode. use wasd.")
         r.manual()
+
+    if instruction == "RST":
+        print("reseting...", end='')
+        m = Mapper()
+        m.check_around = r.check_sensors
+        m.move_to = r.move_to
 
     print("Done")
     # update instruction as complete on API
