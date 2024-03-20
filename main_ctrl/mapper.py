@@ -94,6 +94,7 @@ class Mapper:
             # remove it from the list of unmapped nodes
             self.unmapped_nodes.remove(next)
             
+        api.send_maze_packet(self.maze.get_xy_coordinates(self.cur_node), self.maze.json())
         self.is_mapped = True
 
 

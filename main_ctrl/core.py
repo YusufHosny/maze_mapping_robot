@@ -31,6 +31,10 @@ while True:
     if instruction == "MAP" and m.is_mapped == False:
         print("mapping")
         m.map()
+
+    if instruction == "MNL":
+        r.manual()
+
     print("Done")
     # update instruction as complete on API
     api.set_instruction_complete()
