@@ -23,12 +23,13 @@ class Mapper:
 
     def go_to_node(self, node: Node):
         path = self.maze.pathfind(self.cur_node, node)
+    
         for direc in path:
+            self.cur_node = [edge for edge in self.cur_node.edges if edge.dir == direc][0].dst
             self.move_to(direc)
-        if self.is_mapped:
-            api.send_maze_packet(self.maze.get_xy_coordinates(self.cur_node), self.maze.json())
-        else:
-            api.send_maze_packet()
+            if self.is_mapped:
+                api.send_maze_packet(self.maze.get_xy_coordinates(self.cur_node), self.maze.json())
+        
 
     # SIMULATION: instead of using sensors, input positions
     def _check_around_input(self) -> Tuple[bool]:

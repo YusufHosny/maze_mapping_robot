@@ -23,7 +23,7 @@ while True:
     if instruction[:3] == "MOV":
         print("moving...", end='')
         # get argument
-        grid_pos = (instruction[4], instruction[6])
+        grid_pos = (int(instruction[4]), int(instruction[6]))
         # move to target node
         m.go_to_node(m.maze.get_node_at(grid_pos[0], grid_pos[1]))
 

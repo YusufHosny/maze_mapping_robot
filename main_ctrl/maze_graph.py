@@ -158,7 +158,8 @@ class Graph:
     # get a node object from the graph via its x, y coordinates
     def get_node_at(self, x: int, y: int) -> Node:
         for node in self.nodes:
-            if self.get_xy_coordinates(node) == (x, y):
+            coords = self.get_xy_coordinates(node)
+            if coords[0] == x and coords[1] == y:
                 return node
 
     # get the dimensions of the graph
