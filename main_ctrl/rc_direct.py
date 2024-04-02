@@ -2,7 +2,7 @@ import time
 from robot import robot_controller
 
 # INITIALIZATION
-r = robot_controller(0.5, 0.01, 2, 0.2)
+r = robot_controller(0.75, 0.01, 2, 0.2)
 
 # MAIN LOOP
 while (v := input()) != 'q':
